@@ -3,6 +3,7 @@ import pandas as pd
 from sklearn.impute import SimpleImputer
 from sklearn.preprocessing import LabelEncoder
 from sklearn.preprocessing import StandardScaler
+from sklearn.ensemble import IsolationForest
 from sklearn.pipeline import make_pipeline
 
 def extract_data():
@@ -96,15 +97,30 @@ def preprocess_quantitative_features(x):
 
     return x
 
-def extract_and_preprocess():
+def detect_and_delete_outlier(x, y, poutliers):
+    """
+    """
+    random_state = np.random.RandomState(42)
+    model=IsolationForest(n_estimators=100,max_samples='auto',random_state=random_state)
+    model.fit(x)
+    scores = model.decision_function(x)
+    indexes = scores.argsort()
+    #selection of data without outliers
+    x_without_outliers = x.iloc[indexes[int(poutliers*x.shape[0]):]]
+    y_without_outliers = y.iloc[indexes[int(poutliers*x.shape[0]):]]
+    return x_without_outliers, y_without_outliers
+
+def extract_and_preprocess(poutliers):
     """
     """
     x, y, data = extract_data()
     x = preprocess_categorical_data(x)
     x = preprocess_quantitative_features(x)
+    x, y = detect_and_delete_outlier(x, y, poutliers)
     return x, y, data
 
 
 
 if __name__ == "__main__":
-    x, y, data = extract_and_preprocess()
+    percentage_of_outliers_to_delete = 0.02
+    x, y, data = extract_and_preprocess(percentage_of_outliers_to_delete)
