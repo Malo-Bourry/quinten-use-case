@@ -11,6 +11,8 @@ from model_selection import define_and_select_model
 
 def validate_model(x, y, model, conf_matrix=False, l_curve=False):
     """
+    Computes the score of the selected model on the test set.
+    This function is also able to generate a confusion matrix and a lurning curve.
     """
     #Selected model score
     X_train, X_test, y_train, y_test = train_test_split(x, y, test_size=0.2)
@@ -45,6 +47,7 @@ def validate_model(x, y, model, conf_matrix=False, l_curve=False):
 
 def tune_adaboost_model(x, y):
     """
+    Tunes the AdaBoost model.
     """
     parameters = {'n_estimators':[10,50,100,250],
                   'learning_rate':[0.01,0.1]}
@@ -60,22 +63,20 @@ def tune_adaboost_model(x, y):
     return model
 
 
-def predict_client(indiv, model):
+def construct_adaboost_model(percentage_of_outliers_to_delete):
     """
+    Trains and builds the tuned AdaBoost model.
     """
-    proba_predicted = model.predict_proba(indiv)
-    return proba_predicted
+    x, y, _ = extract_and_preprocess(percentage_of_outliers_to_delete)
+    x, selected_model, selected_model_name, selected_features = define_and_select_model(x, y)
+    print("selected model : {}".format(selected_model_name))
+    _ = validate_model(x, y, selected_model, conf_matrix=True, l_curve=False)
+    tuned_classifier = tune_adaboost_model(x, y)
+    return tuned_classifier, selected_features
 
 
 if __name__ == "__main__":
     percentage_of_outliers_to_delete = 0.02
-    x, y, _ = extract_and_preprocess(percentage_of_outliers_to_delete)
-    x, selected_model, selected_model_name = define_and_select_model(x, y)
-    print("selected model : {}".format(selected_model_name))
-    model = validate_model(x, y, selected_model, conf_matrix=True, l_curve=False)
-    tuned_classifier = tune_adaboost_model(x, y)
-
-    #Prediction for a single data
-    proba_predicted = model.predict_proba(x)
+    tuned_classifier, selected_features = construct_adaboost_model(percentage_of_outliers_to_delete)
 
 

@@ -8,7 +8,7 @@ from sklearn.pipeline import make_pipeline
 
 def extract_data():
     """
-    Extract the dataset.
+    Extracts the dataset from the .csv file.
     """
     data = pd.read_csv("dataset.csv", sep=';')
     x = data.drop(labels="churn", axis=1)
@@ -21,8 +21,9 @@ def extract_data():
     y = y.map({'non':0, 'oui':1})
     return x, y, data
 
-def preprocess_categorical_data(x):
+def preprocess_categorical_features(x):
     """
+    Cleans and encode the categorical data from the dataset.
     """
     binary_categorical_labels = ["assurance_vie", "banque_principale", "compte_epargne", "compte_courant", "espace_client_web", "espace_client", "PEA", "assurance_auto", "assurance_habitation", "credit_immo", "compte_titres"]
     non_binary_categorical_labels = ["type", "genre", "credit_autres", "cartes_bancaires", "methode_contact", "segment_client", "branche"]
@@ -50,6 +51,7 @@ def preprocess_categorical_data(x):
 
 def preprocess_quantitative_features(x):
     """
+    Cleans and rescale the numerical data from the dataset.
     """
     n_quantitative_data = 39
     other_quantitative_data = ["anciennete_mois", "agios_6mois", "age"]
@@ -99,6 +101,8 @@ def preprocess_quantitative_features(x):
 
 def detect_and_delete_outlier(x, y, poutliers):
     """
+    Detects outliers with a IsolationRandomForest classifier.
+    Drops a amount of outliers depending on the percentage of outliers the user entered (poutliers).
     """
     random_state = np.random.RandomState(42)
     model=IsolationForest(n_estimators=100,max_samples='auto',random_state=random_state)
@@ -112,9 +116,10 @@ def detect_and_delete_outlier(x, y, poutliers):
 
 def extract_and_preprocess(poutliers):
     """
+    Combines the two next steps : extraction and preprocessing.
     """
     x, y, data = extract_data()
-    x = preprocess_categorical_data(x)
+    x = preprocess_categorical_features(x)
     x = preprocess_quantitative_features(x)
     x, y = detect_and_delete_outlier(x, y, poutliers)
     return x, y, data

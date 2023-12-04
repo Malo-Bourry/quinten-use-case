@@ -11,6 +11,7 @@ from sklearn.model_selection import cross_val_score
 
 def select_features(x, y, classifier):
     """
+    Selects the best features for a model with the method SelectFromModel.
     """
     selector = SelectFromModel(classifier)
     selector.fit(x, y)
@@ -21,10 +22,11 @@ def select_features(x, y, classifier):
         #Selection of the best features according the SelectFromModel selector
         if not boolean_value_features[feature[0]]:
             x_new = x_new.drop(labels=feature[1], axis=1)
-    return x_new
+    return x_new, boolean_value_features
 
 def train_score_model(x, y, classifier):
     """
+    Computes the score (accuracy metric) on the basis of a cross validation of a train set.
     """
     #Split of the dataset between trainset and testset
     x_train, x_test, y_train, y_test = train_test_split(x, y)
@@ -38,10 +40,11 @@ def train_score_model(x, y, classifier):
 
 def select_model(x, y, classifiers, classifiers_names):
     """
+    Compares the score of several classifiers stored in the list classifiers.
     """    
     classifiers_scores = []
     for classifier in classifiers:
-        x_new = select_features(x, y, classifier)
+        x_new, _ = select_features(x, y, classifier)
         score = train_score_model(x_new, y, classifier)
         classifiers_scores.append(score)
 
@@ -53,21 +56,22 @@ def select_model(x, y, classifiers, classifiers_names):
     selected_model_name = classifiers_names[np.argmax(classifiers_scores)]
     
     #Recovery of the features selection for the selected model
-    x_new = select_features(x, y, selected_model)
-    return x_new, selected_model, selected_model_name
+    x_new, selected_features = select_features(x, y, selected_model)
+    return x_new, selected_model, selected_model_name, selected_features
 
 def define_and_select_model(x, y):
     """
+    Defines the classifiers to be compared and compares their score with select_model.
     """
     classifiers = [LogisticRegression(), SGDClassifier(), AdaBoostClassifier(), RandomForestClassifier()]
     classifiers_names = ["RegLog", "SGD", "AdaBoost", "RandomForest"]
-    x, selected_model, selected_model_name = select_model(x, y, classifiers, classifiers_names)
-    return x, selected_model, selected_model_name
+    x, selected_model, selected_model_name, selected_features = select_model(x, y, classifiers, classifiers_names)
+    return x, selected_model, selected_model_name, selected_features
 
 if __name__ == "__main__":
     percentage_of_outliers_to_delete = 0.02
     x, y, _ = extract_and_preprocess(percentage_of_outliers_to_delete)
-    x, _, selected_model_name = define_and_select_model(x, y)    
+    x, _, selected_model_name, _ = define_and_select_model(x, y)    
     print("selected model : {}".format(selected_model_name))
 
 
